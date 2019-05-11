@@ -1,0 +1,6 @@
+[submodule "yasio"]
+	path = yasio
+	url = https://github.com/halx99/yasio
+[submodule "minhook"]
+	path = minhook
+	url = https://github.com/halx99/minhook
