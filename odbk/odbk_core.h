@@ -4,8 +4,12 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
+#include "yasio/yasio.h"
 #include "odbk_def.h"
-#include "yasio/detail/singleton.h"
+
+
+using namespace yasio;
+using namespace yasio::inet;
 using namespace yasio::gc;
 
 enum
@@ -27,14 +31,27 @@ class odbk_core
 {
 public:
   /// Public functions
-  odbk_core();
   ~odbk_core();
 
   void init(void* hInst);
 
-  void print(const std::string& msg);
+  void print(int type, const std::string& msg);
+
+  /*
+     Send proto data to frontend,
+     bp hit, 
+     load script, 
+     call stack,
+     eval result,
+     message,
+     ...
+  */
+  void send(std::vector<char> data);
 
 public:
+  io_service service_;
+  io_transport *vfd_;
+
   /// Public attributes
   std::string app_root_; // debug target root
   int app_flags_;        // debug target flags

@@ -1,5 +1,4 @@
 #include "yasio/ibstream.h"
-#include <Windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
 #include <fstream>
@@ -248,11 +247,8 @@ static bool load_sym_from_cache(odbk_core *core);
 static void load_sym_from_app_modules(odbk_core *core);
 static bool odbk_lua_finish_load(std::unordered_map<std::string, uintptr_t> &symols);
 
-extern void terminal_api();
-
 bool odbk_load_lua(void *hLua)
 {
-  terminal_api();
   return odbk_load_lua_internal(singleton<odbk_core>::instance(), hLua);
 }
 bool odbk_load_lua_internal(odbk_core *core, void *hLua)

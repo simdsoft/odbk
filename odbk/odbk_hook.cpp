@@ -3,9 +3,9 @@
 #include "MinHook.h"
 
 #if ODBK_BITS == 32
-#  pragma comment(lib, "libMinHook.x86.lib")
+#  pragma comment(lib, "Debug/libMinHook.x86.lib")
 #else
-#  pragma comment(lib, "libMinHook.x64.lib")
+#  pragma comment(lib, "Release/libMinHook.x64.lib")
 #endif
 
 void odbk_hook_init() { MH_Initialize(); }

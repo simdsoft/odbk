@@ -1,4 +1,4 @@
-# Tencent is pleased to support the open source community by making ODBK available.
+# Tencent is pleased to support the open source community by making odbk available.
 # Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
 # Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 # http://opensource.org/licenses/MIT
@@ -51,8 +51,6 @@ set (YASIO_SRC
     yasio/yasio/obstream.cpp
     yasio/yasio/xxsocket.cpp
     yasio/yasio/yasio.cpp
-    yasio/yasio/impl/lyasio.cpp
-    yasio/yasio/impl/yasio-ni.cpp
 )
 set_property(
     SOURCE ${YASIO_SRC}
@@ -72,6 +70,12 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${THIRDPART_INC}
 )
+
+if(WIN32)
+    LINK_DIRECTORIES(
+    "${CMAKE_SOURCE_DIR}\\minhook\\build\\VC15\\lib"
+    )
+endif()
 
 set ( ODBK_CORE
     odbk/odbk_core.cpp
@@ -106,29 +110,29 @@ source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} ODBK_CORE)
 if (APPLE)
     if (IOS)
         set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
-        add_library(ODBK STATIC
+        add_library(odbk STATIC
            ${ODBK_CORE}
            ${THIRDPART_SRC}
         )
-		set_xcode_property (ODBK IPHONEOS_DEPLOYMENT_TARGET "7.0" "all")
+		set_xcode_property (odbk IPHONEOS_DEPLOYMENT_TARGET "7.0" "all")
     else ()
         set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD_64_BIT)")
-        add_library(ODBK MODULE
+        add_library(odbk MODULE
             ${ODBK_CORE}
             ${THIRDPART_SRC}
         )
-        set_target_properties ( ODBK PROPERTIES BUNDLE TRUE )
-        #set_target_properties ( ODBK PROPERTIES FRAMEWORK TRUE )
-        #set_target_properties ( ODBK PROPERTIES MACOSX_RPATH TRUE )
+        set_target_properties ( odbk PROPERTIES BUNDLE TRUE )
+        #set_target_properties ( odbk PROPERTIES FRAMEWORK TRUE )
+        #set_target_properties ( odbk PROPERTIES MACOSX_RPATH TRUE )
     endif ()
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Switch")
-    add_library(ODBK STATIC
+    add_library(odbk STATIC
         ${ODBK_CORE}
         ${THIRDPART_SRC}
     )
-    target_compile_options(ODBK PRIVATE -m64 -mcpu=cortex-a57+fp+simd+crypto+crc -fno-common -fno-short-enums -ffunction-sections -fdata-sections -fPIC -fms-extensions)
+    target_compile_options(odbk PRIVATE -m64 -mcpu=cortex-a57+fp+simd+crypto+crc -fno-common -fno-short-enums -ffunction-sections -fdata-sections -fPIC -fms-extensions)
 else ( )
-    add_library(ODBK SHARED
+    add_library(odbk SHARED
         ${ODBK_CORE}
         ${THIRDPART_SRC}
     )
@@ -139,12 +143,12 @@ if(UINT_ESPECIALLY)
 endif()
 	
 if ( WIN32 AND NOT CYGWIN )
-    target_link_libraries(ODBK
+    target_link_libraries(odbk
         ws2_32
         ${THIRDPART_LIB} 
     )
 else ( )
-    target_link_libraries(ODBK
+    target_link_libraries(odbk
         m
         ${THIRDPART_LIB} 
     )

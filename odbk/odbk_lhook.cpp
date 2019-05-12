@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include "odbk_hook.h"
 #include "odbk_lload.h"
 #include "odbk_core.h"
