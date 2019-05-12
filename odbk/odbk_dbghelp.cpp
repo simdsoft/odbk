@@ -1,5 +1,5 @@
 #include "odbk_dbghelp.h"
-#include "odbk_def.h"
+#include "odbk_internal.h"
 #include "odbk_utils.h"
 
 namespace odbk

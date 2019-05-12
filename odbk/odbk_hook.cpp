@@ -1,4 +1,4 @@
-#include "odbk_def.h"
+#include "odbk_internal.h"
 #include "odbk_hook.h"
 #include "MinHook.h"
 

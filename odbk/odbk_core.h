@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <set>
 #include "yasio/yasio.h"
-#include "odbk_def.h"
+#include "odbk_internal.h"
 
 
 using namespace yasio;
@@ -62,6 +62,10 @@ public:
   void* app_inst_; // HANDLE
   void* app_module_; // HMODULE GetModuleHandleW(nullptr)
   void* app_process_; // HANDLE GetCurrentProcess
+
+  // signal for break and wait command
+  std::recursive_mutex mtx_;
+  std::condition_variable signal_;
 
 private:
   /// Private members

@@ -10,6 +10,7 @@ std::vector<char> odbkp_create_msg(int type, const std::string &msg)
   obs.write_i(ODBKP_VERSION);
   obs.write_i((uint8_t)proto_code::EV_MESSAGE);
   obs.write_va(msg);
+  obs.pop32();
   return std::move(obs.buffer());
 }
 } // namespace odbk

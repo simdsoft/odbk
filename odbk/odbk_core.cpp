@@ -3,7 +3,6 @@
 #include "odbk_core.h"
 #include "odbk_proto.h"
 #include "yasio/ibstream.h"
-// #include <Windows.h>
 
 odbk_core::~odbk_core() {}
 
@@ -43,6 +42,7 @@ void odbk_core::init(void *hInst)
       printf("The connection with frontend is lost: %d, waiting new to income...", e->status());
     }
   });
+  service_.set_option(YOPT_DEFER_EVENT, 0);
   service_.open(0, YCM_TCP_SERVER);
 }
 
