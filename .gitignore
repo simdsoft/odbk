@@ -32,4 +32,5 @@
 *.app
 
 # build tmp files
-msvc/*
+build-win32/*
+build-win64/*
