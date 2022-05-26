@@ -102,16 +102,31 @@ struct lua_Debug_52_53
   char short_src[LUA_IDSIZE]; /* (S) */
   /* private part */
   struct CallInfo *i_ci; /* active function */
-
-  char dummy[512 - LUA_IDSIZE]; /* HALX99: placeholder, fix crash when debug
-                                   quick-lua(LUA_IDSIZE=512) program, avoid invalid memory write */
 };
-
-union lua_Debug
-{
-  lua_Debug_51 _51;
-  lua_Debug_52_53 _52;
+ 
+struct lua_Debug_54 {
+   int event;
+   const char* name;	/* (n) */
+   const char* namewhat;	/* (n) 'global', 'local', 'field', 'method' */
+   const char* what;	/* (S) 'Lua', 'C', 'main', 'tail' */
+   const char* source;	/* (S) */
+   size_t srclen;	/* (S) since lua54 */
+   int currentline;	/* (l) */
+   int linedefined;	/* (S) */
+   int lastlinedefined;	/* (S) */
+   unsigned char nups;	/* (u) number of upvalues */
+   unsigned char nparams;/* (u) number of parameters */
+   char isvararg;        /* (u) */
+   char istailcall;	/* (t) */
+   unsigned short ftransfer;   /* (r) index of first value transferred since lua54 */
+   unsigned short ntransfer;   /* (r) number of transferred values since lua54 */
+   char short_src[LUA_IDSIZE]; /* (S) */
+   /* private part */
+   struct CallInfo* i_ci;  /* active function */
 };
+ 
+// we can get LUA_IDSIZE of VM dynamic via SEH
+void* odbk_lua_Debug_alloca();
 
 // =====================================================
 // must match the configuration of the VM being debugged
@@ -143,8 +158,6 @@ typedef struct luaL_Reg
   const char *name;
   lua_CFunction func;
 } luaL_Reg;
-
-typedef wchar_t lua_WChar; // extension, may no need
 
 #define lua_open ODBK_GET_FUN(__lua_open)
 #define lua_newstate ODBK_GET_FUN(__lua_newstate)
@@ -212,11 +225,9 @@ typedef wchar_t lua_WChar; // extension, may no need
 #define luaL_loadbufferx ODBK_GET_FUN(__luaL_loadbufferx)
 #define luaL_loadfile ODBK_GET_FUN(__luaL_loadfile)
 #define luaL_loadfilex ODBK_GET_FUN(__luaL_loadfilex)
-#define luaL_register ODBK_GET_FUN(__luaL_register) // halx99
-#define luaL_openlibs ODBK_GET_FUN(__luaL_openlibs) // halx99
-#define luaI_openlib ODBK_GET_FUN(__luaI_openlib)   // halx99
-#define lua_towstring ODBK_GET_FUN(__lua_towstring)
-#define lua_iswstring ODBK_GET_FUN(__lua_iswstring)
+#define luaL_register ODBK_GET_FUN(__luaL_register) // 5.1
+#define luaL_openlibs ODBK_GET_FUN(__luaL_openlibs)
+#define luaI_openlib ODBK_GET_FUN(__luaI_openlib)   // 5.1
 #define lua_getupvalue ODBK_GET_FUN(__lua_getupvalue)
 #define lua_setupvalue ODBK_GET_FUN(__lua_setupvalue)
 #define lua_getfenv ODBK_GET_FUN(__lua_getfenv)
@@ -232,15 +243,15 @@ typedef wchar_t lua_WChar; // extension, may no need
 
 // typedefs ALL lua APIs required by debugger.
 typedef lua_State *(*lua_open_func_t)();
-// typedef lua_State *(*lua_open_400_func_t)(int stacksize);
 typedef lua_State *(*lua_newstate_func_t)(lua_Alloc, void *);
 typedef void (*lua_close_func_t)(lua_State *);
 typedef lua_State *(*lua_newthread_func_t)(lua_State *);
 typedef int (*luaopen_base_func_t)(lua_State *L);
 typedef void (*luaL_register_func_t)(lua_State *L, const char *libname,
-                                     const luaL_Reg *l); // halx99
+                                     const luaL_Reg *l); // 5.1 only
 typedef void (*luaI_openlib_func_t)(lua_State *L, const char *libname, const luaL_Reg *l,
-                                    int nup); // halx99
+                                    int nup); // 5.1 only
+typedef void (*luaL_setfuncs_func_t)(lua_State *L, const luaL_Reg *l, int nup); // 5.2+
 typedef int (*lua_error_func_t)(lua_State *);
 typedef int (*lua_absindex_func_t)(lua_State *, int);
 typedef int (*lua_sethook_func_t)(lua_State *, lua_Hook, int, int);
@@ -274,10 +285,10 @@ typedef void (*lua_pushboolean_func_t)(lua_State *, int);
 typedef const char *(*lua_tostring_func_t)(lua_State *, int);
 typedef const char *(*lua_tolstring_func_t)(lua_State *, int, size_t *);
 typedef int (*lua_toboolean_func_t)(lua_State *, int);
-typedef int (*lua_isinteger_func_t)(lua_State *, int); // lua 5.3 only
+typedef int (*lua_isinteger_func_t)(lua_State *, int); // 5.3+
 typedef lua_Integer (*lua_tointeger_func_t)(lua_State *, int);
 typedef lua_Integer (*lua_tointegerx_func_t)(lua_State *, int,
-                                             int *); // since 5.2, lua_tointeger just a macro
+                                             int *); // lua_tointeger just a macro in 5.2+
 typedef lua_CFunction (*lua_tocfunction_func_t)(lua_State *, int);
 typedef lua_Number (*lua_tonumber_func_t)(lua_State *, int);
 typedef lua_Number (*lua_tonumberx_func_t)(lua_State *, int, int *);
@@ -289,7 +300,8 @@ typedef int (*lua_load_func_t)(lua_State *, lua_Reader, void *, const char *chun
 typedef void (*lua_call_func_t)(lua_State *, int, int);
 typedef void (*lua_callk_func_t)(lua_State *, int, int, int, lua_CFunction);
 typedef int (*lua_pcall_func_t)(lua_State *, int, int, int);
-typedef int (*lua_pcallk_func_t)(lua_State *, int, int, int, int, lua_CFunction);
+typedef int (*lua_pcallk_func_t)(lua_State *, int, int, int, ptrdiff_t, lua_CFunction); // 5.3+
+ typedef int (*lua_pcallk_52_func_t)(lua_State *, int, int, int, int, lua_CFunction); // 5.2-
 typedef void (*lua_newtable_func_t)(lua_State *);
 typedef void (*lua_createtable_func_t)(lua_State *, int, int);
 typedef int (*lua_next_func_t)(lua_State *, int);
@@ -305,8 +317,6 @@ typedef int (*luaL_loadbufferx_func_t)(lua_State *L, const char *buff, size_t sz
 typedef int (*luaL_loadfile_func_t)(lua_State *L, const char *fileName);
 typedef int (*luaL_loadfilex_func_t)(lua_State *L, const char *fileName, const char *mode);
 typedef void (*luaL_openlibs_func_t)(lua_State *L);
-typedef const lua_WChar *(*lua_towstring_func_t)(lua_State *L, int index);
-typedef int (*lua_iswstring_func_t)(lua_State *L, int index);
 typedef const char *(*lua_getupvalue_func_t)(lua_State *L, int funcindex, int n);
 typedef const char *(*lua_setupvalue_func_t)(lua_State *L, int funcindex, int n);
 typedef void (*lua_getfenv_func_t)(lua_State *L, int index);
@@ -369,7 +379,7 @@ extern lua_tonumber_func_t __lua_tonumber;
 extern lua_tonumberx_func_t __lua_tonumberx;
 extern lua_touserdata_func_t __lua_touserdata;
 extern lua_load_func_t __lua_load;
-extern lua_load_func_t __lua_loadx;
+extern lua_load_func_t __lua_loadx; // luajit
 extern lua_call_func_t __lua_call;
 extern lua_callk_func_t __lua_callk;
 extern lua_pcall_func_t __lua_pcall;
@@ -387,16 +397,14 @@ extern luaL_loadbuffer_func_t __luaL_loadbuffer;
 extern luaL_loadbufferx_func_t __luaL_loadbufferx;
 extern luaL_loadfile_func_t __luaL_loadfile;
 extern luaL_loadfilex_func_t __luaL_loadfilex;
-extern luaL_register_func_t __luaL_register; // halx99
-extern luaL_openlibs_func_t __luaL_openlibs; // halx99
-extern luaI_openlib_func_t __luaI_openlib;   // halx99
-extern lua_towstring_func_t __lua_towstring;
-extern lua_iswstring_func_t __lua_iswstring;
+extern luaL_register_func_t __luaL_register; // 5.1
+extern luaL_openlibs_func_t __luaL_openlibs;
+extern luaI_openlib_func_t __luaI_openlib;   // 5.1
 extern lua_getupvalue_func_t __lua_getupvalue;
 extern lua_setupvalue_func_t __lua_setupvalue;
 extern lua_getfenv_func_t __lua_getfenv;
 extern lua_setfenv_func_t __lua_setfenv;
-extern lua_pushlightuserdata_func_t l__ua_pushlightuserdata;
+extern lua_pushlightuserdata_func_t __lua_pushlightuserdata;
 extern lua_cpcall_func_t __lua_cpcall;
 extern lua_pushthread_func_t __lua_pushthread;
 extern lua_newuserdata_func_t __lua_newuserdata;
